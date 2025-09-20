@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from importlib import metadata
 from types import FunctionType
 
-from src.pygames.hangman import Hangman
+from .hangman import Hangman
 
 def _get_module_version():
     pyproject_file = pathlib.Path(__file__).parents[2] / "pyproject.toml"
