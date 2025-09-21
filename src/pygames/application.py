@@ -14,7 +14,7 @@ def _get_module_version():
         with open(pyproject_file, "rb") as f:
             return tomllib.load(f)['project']['version']
 
-    return metadata.version("package")
+    return metadata.version('pygames')
 
 
 __version__ = _get_module_version()
