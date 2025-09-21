@@ -90,6 +90,7 @@ class _SecretWord:
 
         return ''.join([str(slot) for slot in self.slots])
 
+
 class _GameState:
     def __init__(self, secret_word: str, lives: int):
         self.secret_word = _SecretWord(secret_word)
@@ -167,6 +168,7 @@ class _GameState:
 
         return f"There {copula} {count} letter {letter.upper()}{num_marker}"
 
+
 class Hangman:
     _WORDLIST_URL = 'https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-no-swears.txt'
 
@@ -200,6 +202,7 @@ class Hangman:
     @classmethod
     def lazy_launch(cls, lives: int = 8):
         cls().launch(lives)
+
 
 if __name__ == '__main__':
     Hangman.lazy_launch()
