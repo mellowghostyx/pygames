@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
-from src.pygames import application
+from src import pygames
 
-app = application.Application()
+app = pygames.Application()
 
 try:
     app.run(sys.argv[1:])
-except application.ArgumentError as e:
+except pygames.ArgumentError as e:
     sys.stderr.write(f"error: {e}\n")
     exit(1)
