@@ -1,18 +1,19 @@
 import argparse
 import pathlib
-import tomllib
 from dataclasses import dataclass
-from importlib import metadata
 from types import FunctionType
-
 from .hangman import Hangman
 
 def _get_module_version():
     pyproject_file = pathlib.Path(__file__).parents[2] / "pyproject.toml"
 
     if pyproject_file.exists():
+        import tomllib
+
         with open(pyproject_file, "rb") as f:
             return tomllib.load(f)['project']['version']
+
+    from importlib import metadata
 
     return metadata.version('pygames')
 
