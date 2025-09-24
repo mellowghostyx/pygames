@@ -5,6 +5,9 @@ from types import FunctionType
 from .hangman import Hangman
 
 def _get_module_version():
+    """TODO
+    """
+
     pyproject_file = pathlib.Path(__file__).parents[2] / "pyproject.toml"
 
     if pyproject_file.exists():
@@ -85,15 +88,23 @@ class Application:
         for game in self._GAMES:
             self._add_game(subparsers, game)
 
-    def run(self, argv): # HACK: optimize!
-        """TODO"""
+    def run(self, *argv): # HACK: optimize!
+        """TODO
+
+        Args:
+            argv: TODO
+
+        Raises:
+            ArgumentError: The provided arguments are invalid.
+        """
 
         args = vars(self._parser.parse_args(argv))
         launch_func = args.pop('function')
         launch_func(**args)
 
     def _add_game(self, subparsers, game: _AppGame):
-        """TODO"""
+        """TODO
+        """
 
         subparser = subparsers.add_parser(
             game.name, usage="%(prog)s [options]", help=f"play {game.name}",
@@ -106,7 +117,8 @@ class Application:
         subparser.set_defaults(function=game.function)
 
     def _add_option(self, parser, option: _AppOption):
-        """TODO"""
+        """TODO
+        """
 
         if not option.flag_short:
             parser.add_argument(option.flag_long, **option.config)

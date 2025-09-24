@@ -6,7 +6,7 @@ A collection of small CLI games written in Python.
 
 ## Usage
 
-Use [pipx](https://pipx.pypa.io/stable/) to clone the repository like so:
+Use [pipx](https://pipx.pypa.io/stable/) to install the repository like so:
 
 ```
 pipx install git+https://github.com/mellowghostyx/pygames.git

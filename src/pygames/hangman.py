@@ -5,9 +5,16 @@ import requests
 
 
 class _SecretLetter:
+    """A hidden letter, only to be revealed with a correct guess.
+
+    A letter that will only reveal itself once guessed correctly. When parsed
+    into a string, it will only contain the hidden letter if it was guessed
+    correctly; otherwise, the string will only contain an underscore.
+    """
+
     def __init__(self, letter: str):
-        self.letter = str(letter)
-        self.hidden = True
+        self._letter = letter
+        self._hidden = True
 
     def guess(self, letter: str) -> bool:
         """Tries to guess the secret letter with the provided guess.
@@ -23,21 +30,30 @@ class _SecretLetter:
             bool: Whether or not the guess was correct.
         """
 
-        if str(letter) == self.letter:
-            self.hidden = False
+        if letter == self._letter:
+            self._hidden = False
             return True
 
         return False
 
     def __str__(self):
-        return '_' if self.hidden else self.letter
+        return '_' if self._hidden else self._letter
 
 
 class _SecretWord:
+    """A hidden word, only to be revealed with a correct guess.
+
+    A word where each letter is hidden, only to be revealed with either a
+    correct guess to the letter, or a correct guess to the entire word. When
+    parsed into a string, each letter will only be provided if they were
+    correctly guessed; otherwise they will be represented with an underscore.
+    If the entire word is guessed correctly, every letter will be revealed.
+    """
+
     def __init__(self, word: str):
-        self.word = str(word)
-        self.slots = [_SecretLetter(letter) for letter in self.word]
-        self.hidden = True
+        self._word = word
+        self._slots = [_SecretLetter(letter) for letter in self._word]
+        self._hidden = True
 
     def guess_letter(self, letter: str) -> int:
         """Tries to guess a letter in the secret word with the provided letter.
@@ -57,11 +73,11 @@ class _SecretWord:
 
         count = 0
 
-        for n in range(0, len(self.slots)):
-            if self.slots[n].guess(letter): count += 1
+        for n in range(0, len(self._slots)):
+            if self._slots[n].guess(letter): count += 1
 
-        if not any([slot.hidden for slot in self.slots]):
-            self.hidden = False
+        if not any([slot._hidden for slot in self._slots]):
+            self._hidden = False
 
         return count
 
@@ -78,20 +94,23 @@ class _SecretWord:
             bool: Whether or not the guess was correct.
         """
 
-        if str(word) == self.word:
-            self.hidden = False
+        if word == self._word:
+            self._hidden = False
             return True
 
         return False
 
     def __str__(self):
-        if not self.hidden:
-            return self.word
+        if not self._hidden:
+            return self._word
 
-        return ''.join([str(slot) for slot in self.slots])
+        return ''.join([str(slot) for slot in self._slots])
 
 
 class _GameState:
+    """TODO
+    """
+
     def __init__(self, secret_word: str, lives: int):
         self.secret_word = _SecretWord(secret_word)
         self.lives = lives
@@ -101,7 +120,16 @@ class _GameState:
         self._wrong_guesses = ''
 
     def summarize(self) -> str:
-        """TODO"""
+        """Generates a string of relevant data about the current game state.
+
+        Provides the secret word (with unguessed letters hidden and replaced
+        with underscores), the number of lives remaining, and a list of wrong
+        letter guesses (if applicable), all in a single string with interpuncts
+        separating them.
+
+        Returns:
+            str: The aforementioned string of relevant game stats.
+        """
 
         summary = f"{self.secret_word} · {self.lives} lives"
 
@@ -111,10 +139,23 @@ class _GameState:
         return summary
 
     def try_guess(self, guess: str) -> str:
-        """TODO
+        """Modifies the game state according to the provided guess.
+
+        Tries to guess the secret word with the provided guess, then generates
+        a string message stating the validity and successfulness of the
+        provided guess, and changes the game state accordingly. (Note\: a
+        correct word guess returns an empty string, as no message is provided
+        from such a guess in game).
 
         Args:
             guess (str): The guess to try.
+
+        Returns:
+            str: A message explaining whether or not the guess was valid
+                and/or correct. If the guess is invalid, it explains why it is
+                invalid; If the guess is valid but incorrect, it states as
+                such; if the guess is a correct letter, it describes how many
+                instances there are of that letter in the secret word.
         """
 
         # return early if the guess matches the secret word
@@ -170,6 +211,9 @@ class _GameState:
 
 
 class Hangman:
+    """TODO
+    """
+
     _WORDLIST_URL = 'https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-no-swears.txt'
 
     def __init__(self):
@@ -177,12 +221,21 @@ class Hangman:
         self._wordlist = tuple(filter(lambda x: 5 <= len(x) <= 12, all_words))
 
     def launch(self, lives: int = 8):
+        """Starts a fresh game of Hangman.
+
+        Launches a game of Hangman with a randomly selected word as the secret
+        word, and the provided lives to start with.
+
+        Args:
+            lives (int): The number of lives to start off with (default: 8).
+        """
+
         if not isinstance(lives, int):
             raise TypeError(f"expected int, given {type(lives).__name__}")
 
         game_state = _GameState(random.choice(self._wordlist), lives)
 
-        while game_state.lives and game_state.secret_word.hidden:
+        while game_state.lives and game_state.secret_word._hidden:
             print(game_state.summarize())
 
             try:
@@ -195,12 +248,23 @@ class Hangman:
             if result_msg: print(result_msg)
             print() # newline
 
-        game_state.secret_word.hidden = False
+        game_state.secret_word._hidden = False
         print("You win!" if game_state.lives else "Game over!")
         print(f"The secret word was \"{game_state.secret_word}\"")
 
     @classmethod
     def lazy_launch(cls, lives: int = 8):
+        """Loads necessary game data before starting a game of hangman.
+
+        Launches a game of hangman after lazily loading the necessary data from
+        the Hangman class. This is intended for applications where the game
+        needs to boot from a single function, without pre-loading any data for
+        a Hangman object.
+
+        Args:
+            lives (int): The number of lives to start off with (default: 8).
+        """
+
         cls().launch(lives)
 
 
