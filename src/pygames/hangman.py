@@ -108,8 +108,7 @@ class _SecretWord:
 
 
 class _GameState:
-    """TODO
-    """
+    """Game state manager for a single game of hangman."""
 
     def __init__(self, secret_word: str, lives: int):
         self.secret_word = _SecretWord(secret_word)
@@ -211,8 +210,7 @@ class _GameState:
 
 
 class Hangman:
-    """TODO
-    """
+    """Runner for a command-line implementation of Hangman."""
 
     _WORDLIST_URL = 'https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-no-swears.txt'
 

@@ -1,4 +1,4 @@
-from .application import Application, ArgumentError
+from .application import Application, BadArgumentError
 
 def run_cli():
     """TODO
@@ -12,6 +12,6 @@ def run_cli():
 
     try:
         app.run(*sys.argv[1:])
-    except ArgumentError as e:
+    except BadArgumentError as e:
         sys.stderr.write(f"error: {e}\n")
         exit(1)

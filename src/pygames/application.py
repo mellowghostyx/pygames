@@ -5,17 +5,27 @@ from types import FunctionType
 from .hangman import Hangman
 
 def _get_module_version():
-    """TODO
+    """Retrieves the version number of this application.
+
+    Finds and returns the version number of the "pygames" application, AKA:
+    this application right here. When running from the PyGames source code,
+    retrieves the version number from the pyproject TOML file. Otherwise, reads
+    the version number from the package's metadata.
+
+    Returns:
+        str: the version number for PyGames.
     """
 
     pyproject_file = pathlib.Path(__file__).parents[2] / "pyproject.toml"
 
     if pyproject_file.exists():
+        # tomllib only needed when running from the source code
         import tomllib
 
         with open(pyproject_file, "rb") as f:
             return tomllib.load(f)['project']['version']
 
+    # importlib only needed when running from a package
     from importlib import metadata
 
     return metadata.version('pygames')
@@ -24,29 +34,59 @@ def _get_module_version():
 __version__ = _get_module_version()
 
 
-class ArgumentError(Exception):
+class BadArgumentError(Exception):
     """Error from using an invalid command-line argument."""
 
 
 class _ArgumentParser(argparse.ArgumentParser):
-    """TODO"""
+    """Customized command line argument parser.
+
+    A revised implementation of the ArgumentParser class in the "argparse"
+    module. Instead of automatically printing an error message and exiting when
+    faced with an error, it will raise a "BadArgumentError" that can be
+    caught and handled separately. This makes it easier to test.
+    """
 
     def error(self, message: str):
-        raise ArgumentError(message)
+        raise BadArgumentError(message)
 
 
 @dataclass
 class _AppOption:
-    """TODO"""
+    """Optional argument for a command line application.
 
-    flag_short: str | None
+    Configuration data for an optional command-line argument that is to be
+    provided by a command-line application.
+
+    Attributes:
+        flag_short (str): a short flag representing this option in the command
+            line, consisting of a hyphen and a single letter.
+        flag_long (str): a full-length flag representing this option in the
+            command line, consisting of 2 hyphens and at least 1 word. Note that multiple words are to be delimited with a single hyphen.
+        config (dict): additional configuration details for this option, which
+            are to be registered by the command-line parser for this option.
+    """
+
+    flag_short: str
     flag_long: str
     config: dict
 
 
 @dataclass
 class _AppGame:
-    """TODO"""
+    """Game accessible from this application as a command-line subcommand.
+
+    A subcommand for a command-line application, representing a particular game
+    for the command-line.
+
+    Attributes:
+        name (str): the name for the subcommand.
+        function (FunctionType): the function to run when the subcommand is
+            used.
+        options (tuple): collection of _AppOption objects representing the
+            command-line options that are to be registered for this
+            subcommand.
+    """
 
     name: str
     function: FunctionType
@@ -119,10 +159,6 @@ class Application:
     def _add_option(self, parser, option: _AppOption):
         """TODO
         """
-
-        if not option.flag_short:
-            parser.add_argument(option.flag_long, **option.config)
-            return
 
         parser.add_argument(
             option.flag_short, option.flag_long, **option.config
