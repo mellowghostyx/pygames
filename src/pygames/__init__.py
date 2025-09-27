@@ -1,5 +1,6 @@
 from .application import Application, BadArgumentError
 
+
 def run_cli():
     """TODO
     """

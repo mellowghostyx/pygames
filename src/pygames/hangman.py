@@ -1,5 +1,40 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2025 MellowGhostyx
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""A command-line implementation of the game 'Hangman'.
+
+A version of the game 'Hangman' made for the command-line interface, wrapped
+into a single class. The game can be played through the `Hangman` class
+contained in this module, like so:
+
+  game = Hangman()
+  game.launch()
+
+Alternatively, you can play the game by executing this file, i.e. by running
+`python hangman.py`. If you are on a Unix-based system, you can also convert
+this file into an executable via `chmod +x hangman.py`, then run the file
+directly.
+"""
+
 import random
 import requests
 
@@ -108,7 +143,7 @@ class _SecretWord:
 
 
 class _GameState:
-    """Game state manager for a single game of hangman."""
+    """Game state manager for a single game of Hangman."""
 
     def __init__(self, secret_word: str, lives: int):
         self.secret_word = _SecretWord(secret_word)
@@ -184,7 +219,7 @@ class _GameState:
     def _generate_count_message(self, count: int, letter: str) -> str:
         """Creates a string stating the number of matches for the given guess.
 
-        Uses the provided "count" and "letter" values to construct a message,
+        Uses the provided 'count' and 'letter' values to construct a message,
         describing the letter as occuring in the secret word a certain number
         of times, with the count value as that number.
 
@@ -252,7 +287,7 @@ class Hangman:
 
     @classmethod
     def lazy_launch(cls, lives: int = 8):
-        """Loads necessary game data before starting a game of hangman.
+        """Loads necessary game data before starting a game of Hangman.
 
         Launches a game of hangman after lazily loading the necessary data from
         the Hangman class. This is intended for applications where the game
