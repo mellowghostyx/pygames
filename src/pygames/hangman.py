@@ -83,6 +83,11 @@ class _SecretWord:
     parsed into a string, each letter will only be provided if they were
     correctly guessed; otherwise they will be represented with an underscore.
     If the entire word is guessed correctly, every letter will be revealed.
+
+    Attributes:
+        hidden (bool): Whether or not the secret word is hidden. Starts out
+            as True, and automatically becomes False if all letters in the secret word have been revealed via correct guesses. This value can
+            be changed manually to force the secret word to be revealed.
     """
 
     def __init__(self, word: str):
