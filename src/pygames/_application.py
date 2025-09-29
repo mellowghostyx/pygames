@@ -54,7 +54,7 @@ class _ArgumentParser(argparse.ArgumentParser):
 
 @dataclass
 class _AppOption:
-    """An optional argument for a command line application.
+    """An optional argument for a command-line application.
 
     Configuration data for an optional command-line argument that is to be
     provided by a command-line application.
@@ -74,19 +74,17 @@ class _AppOption:
 
 
 @dataclass
-class _AppGame:
-    """A game accessible from this application as a command-line subcommand.
+class _Subcommand:
+    """A subcommand for a command-line application.
 
-    A subcommand for a command-line application, representing a particular game
-    for the command-line.
+    Configuration data for a subcommand that is to be provided by a command-line application.
 
     Attributes:
         name (str): The name for the subcommand.
         function (FunctionType): The function to run when the subcommand is
-            used.
+            called.
         options (tuple): A collection of _AppOption objects representing the
-            command-line options that are to be registered for this
-            subcommand.
+            command-line options that are to be registered to the subcommand.
     """
 
     name: str
@@ -105,7 +103,7 @@ class Application:
         }),
     )
     _GAMES = (
-        _AppGame('hangman', Hangman.lazy_launch, (
+        _Subcommand('hangman', Hangman.lazy_launch, (
             _AppOption(('-l', '--lives'), {
                 'type': int, 'default': 8,
                 'help': "number of lives to start with (default: %(default)s)",
@@ -127,7 +125,7 @@ class Application:
         )
 
         for game in self._GAMES:
-            self._add_game(subparsers, game)
+            self._add_subcommand(subparsers, game)
 
     def run(self, *argv): # HACK: optimize!
         """Runs PyGames with the provided arguments.
@@ -147,8 +145,16 @@ class Application:
         launch_func = args.pop('function')
         launch_func(**args)
 
-    def _add_game(self, subparsers, game: _AppGame):
-        """TODO
+    def _add_subcommand(self, subparsers, game: _Subcommand):
+        """Adds the provided subcommand to the argument parser.
+
+        Args:
+            subparsers (argparse._SubParsersAction): A pointer to the
+                configuration data for all subparsers added to the main
+                argument parser. The subcommand, and any other arguments tied
+                to it, must be interpreted through a dedicated subparser,
+                hence why this object is required.
+            game (_Subcommand): Configuration data for the subcommand.
         """
 
         subparser = subparsers.add_parser(

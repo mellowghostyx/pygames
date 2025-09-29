@@ -88,7 +88,7 @@ class _SecretWord:
     def __init__(self, word: str):
         self._word = word
         self._slots = [_SecretLetter(letter) for letter in self._word]
-        self._hidden = True
+        self.hidden = True
 
     def guess_letter(self, letter: str) -> int:
         """Tries to guess a letter in the secret word with the provided letter.
@@ -112,7 +112,7 @@ class _SecretWord:
             if self._slots[n].guess(letter): count += 1
 
         if not any([slot._hidden for slot in self._slots]):
-            self._hidden = False
+            self.hidden = False
 
         return count
 
@@ -130,13 +130,13 @@ class _SecretWord:
         """
 
         if word == self._word:
-            self._hidden = False
+            self.hidden = False
             return True
 
         return False
 
     def __str__(self):
-        if not self._hidden:
+        if not self.hidden:
             return self._word
 
         return ''.join([str(slot) for slot in self._slots])
@@ -177,7 +177,7 @@ class _GameState:
 
         Tries to guess the secret word with the provided guess, then generates
         a string message stating the validity and successfulness of the
-        provided guess, and changes the game state accordingly. (Note\: a
+        provided guess, and changes the game state accordingly. (Note that a
         correct word guess returns an empty string, as no message is provided
         from such a guess in game).
 
@@ -268,7 +268,7 @@ class Hangman:
 
         game_state = _GameState(random.choice(self._wordlist), lives)
 
-        while game_state.lives and game_state.secret_word._hidden:
+        while game_state.lives and game_state.secret_word.hidden:
             print(game_state.summarize())
 
             try:
@@ -281,7 +281,7 @@ class Hangman:
             if result_msg: print(result_msg)
             print() # newline
 
-        game_state.secret_word._hidden = False
+        game_state.secret_word.hidden = False
         print("You win!" if game_state.lives else "Game over!")
         print(f"The secret word was \"{game_state.secret_word}\"")
 

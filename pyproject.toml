@@ -12,7 +12,6 @@ dependencies = [
 ]
 
 [project.scripts]
-
 pygames = "pygames.__init__:run_cli"
 
 [tool.poetry]
