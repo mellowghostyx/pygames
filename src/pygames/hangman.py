@@ -270,6 +270,8 @@ class Hangman:
 
         if not isinstance(lives, int):
             raise TypeError(f"expected int, given {type(lives).__name__}")
+        elif lives < 1:
+            raise ValueError("cannot start with less than 1 life")
 
         game_state = _GameState(random.choice(self._wordlist), lives)
 

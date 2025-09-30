@@ -138,12 +138,16 @@ class Application:
                 one or more command-line arguments.
 
         Raises:
-            BadArgumentError: The provided arguments are invalid.
+            BadArgumentError: One or more arguments are invalid.
         """
 
         args = vars(self._parser.parse_args(argv))
         launch_func = args.pop('function')
-        launch_func(**args)
+
+        try:
+            launch_func(**args)
+        except ValueError as e:
+            raise BadArgumentError(f"invalid config: {e}")
 
     def _add_subcommand(self, subparsers, game: _Subcommand):
         """Adds the provided subcommand to the argument parser.
