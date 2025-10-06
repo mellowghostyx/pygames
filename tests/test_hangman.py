@@ -72,16 +72,19 @@ def test_secret_word_guess_letter_count(
     ('hibernation', 'hibnq', 'hib__n__i_n'),
 ))
 def test_secret_word_guess_letter_str(word: str, guesses: str, expected: str):
-    """Tests if `_SecretWord.guess_letter()` results in ...
+    """Tests if `_SecretWord.guess_letter()` correctly changes __str__ value.
 
     Verifies that the `guess_letter()` method in the `hangman._SecretWord`
-    class correctly changes the value
+    class correctly changes how the secret word is presented when parsed
+    into a string.
 
     Args:
         word (str): A word to initialized the `hangman._SecretWord` object
             with.
-        guesses (str): TODO
-        expected (str): TODO
+        guesses (str): A sequence containing all the letters that are to be
+            guessed on for the word.
+        expected (str): The value expected from parsing the secret word into a
+            string, after trying all the guesses from ``guesses``.
     """
 
     secret_word = hangman._SecretWord(word)
