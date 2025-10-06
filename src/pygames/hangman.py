@@ -24,15 +24,15 @@
 
 A version of the game 'Hangman' made for the command-line interface, wrapped
 into a single class. The game can be played through the `Hangman` class
-contained in this module, like so:
+contained in this module, like so: ::
 
-  game = Hangman()
-  game.launch()
+    game = Hangman()
+    game.launch()
 
-Alternatively, you can play the game by executing this file, i.e. by running
-`python hangman.py`. If you are on a Unix-based system, you can also convert
-this file into an executable via `chmod +x hangman.py`, then run the file
-directly.
+Alternatively, you can play the game by executing this file, i.e. by
+running `python hangman.py`. If you are on a Unix-based system, you can
+also convert this file into an executable via `chmod +x hangman.py`, then
+run the file directly.
 """
 
 import random
@@ -182,9 +182,11 @@ class _GameState:
 
         Tries to guess the secret word with the provided guess, then generates
         a string message stating the validity and successfulness of the
-        provided guess, and changes the game state accordingly. (Note that a
-        correct word guess returns an empty string, as no message is provided
-        from such a guess in game).
+        provided guess, and changes the game state accordingly.
+
+        Note:
+            A correct word guess returns an empty string, as no message is
+            provided from such a guess in-game
 
         Args:
             guess (str): The guess to try.
@@ -224,7 +226,7 @@ class _GameState:
     def _generate_count_message(self, count: int, letter: str) -> str:
         """Creates a string stating the number of matches for the given guess.
 
-        Uses the provided 'count' and 'letter' values to construct a message,
+        Uses the provided `count` and `letter` values to construct a message,
         describing the letter as occuring in the secret word a certain number
         of times, with the count value as that number.
 

@@ -99,13 +99,15 @@ class Application:
 
     _OPTIONS = (
         _AppOption(('-v', '--version'), {
-            'action': 'version', 'version': f"%(prog)s {__version__}",
+            'action': 'version',
+            'version': f"%(prog)s {__version__}",
         }),
     )
     _GAMES = (
         _Subcommand('hangman', Hangman.lazy_launch, (
             _AppOption(('-l', '--lives'), {
-                'type': int, 'default': 8,
+                'type': int,
+                'default': 8,
                 'help': "number of lives to start with (default: %(default)s)",
             }),
         )),
@@ -113,7 +115,8 @@ class Application:
 
     def __init__(self):
         self._parser = _ArgumentParser(
-            prog='pygames', usage="%(prog)s [options] [command] ...",
+            prog='pygames',
+            usage="%(prog)s [options] [command] ...",
             description="A collection of small CLI games written in Python"
         )
 
@@ -121,7 +124,8 @@ class Application:
             self._parser.add_argument(*option.flags, **option.config)
 
         subparsers = self._parser.add_subparsers(
-            prog=self._parser.prog, required=True
+            prog=self._parser.prog,
+            required=True
         )
 
         for game in self._GAMES:
@@ -130,7 +134,7 @@ class Application:
     def run(self, *argv): # HACK: optimize!
         """Runs PyGames with the provided arguments.
 
-        Interprets the provided 'argv' strings as command-line arguments, and
+        Interprets the provided `argv` strings as command-line arguments, and
         runs the corresponding PyGames action from those arguments.
 
         Args:
@@ -149,7 +153,11 @@ class Application:
         except ValueError as e:
             raise BadArgumentError(f"invalid config: {e}")
 
-    def _add_subcommand(self, subparsers, game: _Subcommand):
+    def _add_subcommand(
+        self,
+        subparsers: argparse._SubParsersAction,
+        game: _Subcommand,
+    ):
         """Adds the provided subcommand to the argument parser.
 
         Args:
@@ -162,7 +170,9 @@ class Application:
         """
 
         subparser = subparsers.add_parser(
-            game.name, usage="%(prog)s [options]", help=f"play {game.name}",
+            game.name,
+            usage="%(prog)s [options]",
+            help=f"play {game.name}",
             description=f"Play {game.name}"
         )
 
