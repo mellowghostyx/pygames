@@ -1,6 +1,3 @@
-"""TODO
-"""
-
 import pytest
 from src.pygames import hangman
 
@@ -106,7 +103,7 @@ def test_secret_word_guess_word(word: str, wrong_guesses: tuple):
     Args:
         word (str): A word to initialized the `hangman._SecretWord` object
             with.
-        wrong_guesses (tuple): TODO
+        wrong_guesses (tuple): A sequence of words to ... TODO
     """
 
     secret_word = hangman._SecretWord(word)
@@ -139,10 +136,10 @@ def test_game_state_summarize(
     guesses: str,
     expected: str,
 ):
-    """TODO
+    """Tests if `_GameState.summarize()` correctly generates a 1-line summary.
 
     Args:
-        word (str): TODO
+        word (str): The word to use as the game's secret word
         lives (int): TODO
         guesses (str): TODO
         expected (str): TODO
@@ -165,7 +162,7 @@ def test_game_state_try_guess_invalid(word: str, invalid_guesses: tuple):
     """TODO
 
     Args:
-        word (str): TODO
+        word (str): The word to use as the game's secret word
         invalid_guesses (str): TODO
     """
 
@@ -190,7 +187,7 @@ def test_game_state_try_guess_wrong(
     """TODO
 
     Args:
-        word (str): TODO
+        word (str): The word to use as the game's secret word
         guess_word (str): TODO
         guess_letter (str): TODO
     """
@@ -222,7 +219,7 @@ def test_game_state_try_guess_count(
     """TODO
 
     Args:
-        word (str): TODO
+        word (str): The word to use as the game's secret word
         guess_single (str): TODO
         guess_double (str): TODO
     """

@@ -2,6 +2,7 @@ import argparse
 import pathlib
 from dataclasses import dataclass
 from types import FunctionType
+
 from .hangman import Hangman
 
 
@@ -16,6 +17,11 @@ def _get_module_version():
     Returns:
         str: The version number for PyGames.
     """
+
+    # NOTE: This method is not unit-testable: a major part of this function
+    # relies on the package environment created by pipx when installing the
+    # application. This cannot be adequately replicated through unit tests (at
+    # least as far as I know).
 
     pyproject_file = pathlib.Path(__file__).parents[2] / "pyproject.toml"
 
@@ -56,8 +62,8 @@ class _ArgumentParser(argparse.ArgumentParser):
 class _AppOption:
     """An optional argument for a command-line application.
 
-    Configuration data for an optional command-line argument that is to be
-    provided by a command-line application.
+    Configuration data that is to be passed to the argument parser to register
+    a new optional command-line argument for a command-line application.
 
     Attributes:
         flags (str): The flags representing this option in the command
@@ -77,18 +83,21 @@ class _AppOption:
 class _Subcommand:
     """A subcommand for a command-line application.
 
-    Configuration data for a subcommand that is to be provided by a command-line application.
+    Configuration data that is to be passed to the argument parser to register
+    a new subcommand for a command-line application.
 
     Attributes:
         name (str): The name for the subcommand.
-        function (FunctionType): The function to run when the subcommand is
+        action (FunctionType): The function to run when the subcommand is
             called.
+        description (str): A brief description of what the subcommand does.
         options (tuple): A collection of _AppOption objects representing the
             command-line options that are to be registered to the subcommand.
     """
 
     name: str
-    function: FunctionType
+    action: FunctionType
+    description: str
     options: tuple
 
 
@@ -104,7 +113,7 @@ class Application:
         }),
     )
     _GAMES = (
-        _Subcommand('hangman', Hangman.lazy_launch, (
+        _Subcommand('hangman', Hangman.lazy_launch, "play Hangman", (
             _AppOption(('-l', '--lives'), {
                 'type': int,
                 'default': 8,
@@ -117,7 +126,7 @@ class Application:
         self._parser = _ArgumentParser(
             prog='pygames',
             usage="%(prog)s [options] [command] ...",
-            description="A collection of small CLI games written in Python"
+            description="A collection of small CLI games written in Python",
         )
 
         for option in self._OPTIONS:
@@ -125,7 +134,7 @@ class Application:
 
         subparsers = self._parser.add_subparsers(
             prog=self._parser.prog,
-            required=True
+            required=True,
         )
 
         for game in self._GAMES:
@@ -145,18 +154,17 @@ class Application:
             BadArgumentError: One or more arguments are invalid.
         """
 
-        args = vars(self._parser.parse_args(argv))
-        launch_func = args.pop('function')
+        action, kwargs = self._parse_arguments(argv)
 
         try:
-            launch_func(**args)
+            action(**kwargs)
         except ValueError as e:
             raise BadArgumentError(f"invalid config: {e}")
 
     def _add_subcommand(
         self,
         subparsers: argparse._SubParsersAction,
-        game: _Subcommand,
+        subcommand: _Subcommand,
     ):
         """Adds the provided subcommand to the argument parser.
 
@@ -166,17 +174,32 @@ class Application:
                 argument parser. The subcommand, and any other arguments tied
                 to it, must be interpreted through a dedicated subparser,
                 hence why this object is required.
-            game (_Subcommand): Configuration data for the subcommand.
+            subcommand (_Subcommand): Configuration data for the subcommand.
         """
 
         subparser = subparsers.add_parser(
-            game.name,
+            subcommand.name,
             usage="%(prog)s [options]",
-            help=f"play {game.name}",
-            description=f"Play {game.name}"
+            help=subcommand.description,
+            description=subcommand.description.capitalize(),
         )
 
-        for option in game.options:
+        for option in subcommand.options:
             subparser.add_argument(*option.flags, **option.config)
 
-        subparser.set_defaults(function=game.function)
+        subparser.set_defaults(function=subcommand.action)
+
+    def _parse_arguments(self, argv: list | tuple):
+        """TODO
+
+        Args:
+            argv (list | tuple): TODO
+
+        Returns:
+            tuple: TODO
+        """
+
+        args = vars(self._parser.parse_args(argv))
+        action = args.pop('function')
+
+        return (action, args)

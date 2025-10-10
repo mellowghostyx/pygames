@@ -16,6 +16,11 @@ def run_cli():
         application, particularly one installed via pipx.
     """
 
+    # NOTE: There's no point in unit-testing this function: it merely
+    # initializes an Application object and calls the `run()` method on it with
+    # some simple exception handling. The only testable aspect of this code is
+    # the `run()` method, which can be tested on its own.
+
     # sys is only needed if this method is called (i.e. if package is used
     # as an executable), otherwise it should not be included in the package
     import sys
