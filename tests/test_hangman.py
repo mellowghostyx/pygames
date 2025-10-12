@@ -2,6 +2,16 @@ import pytest
 from src.pygames import hangman
 
 
+@pytest.fixture
+def secret_word() -> hangman._SecretWord:
+    return hangman._SecretWord('application')
+
+
+@pytest.fixture
+def game_state() -> hangman._GameState:
+    return hangman._GameState('application', 8)
+
+
 @pytest.mark.parametrize('letter,wrong_guesses', (
     ('a', 'bcx5&'), ('x', 'yza8@'), ('g', 'hir3%'),
 ))
@@ -32,15 +42,14 @@ def test_secret_letter(letter: str, wrong_guesses: str):
     assert str(secret_letter) == letter
 
 
-@pytest.mark.parametrize('word,letter_once,letter_twice,letter_none', (
-    ('statement', 'a', 'e', 'x'), ('psychology', 'p', 'y', 'z'),
-    ('hibernation', 'h', 'i', 'q'),
+@pytest.mark.parametrize('guess,expected', (
+    ('a', 2), ('p', 2), ('l', 1), ('i', 2), ('c', 1),
+    ('t', 1), ('o', 1), ('n', 1), ('x', 0), ('y', 0),
 ))
 def test_secret_word_guess_letter_count(
-    word: str,
-    letter_once: str,
-    letter_twice: str,
-    letter_none: str,
+    secret_word,
+    guess: str,
+    expected: int,
 ):
     """Tests if `_SecretWord.guess_letter()` returns the right letter count.
 
@@ -49,26 +58,23 @@ def test_secret_word_guess_letter_count(
     that letter occurs in the secret word.
 
     Args:
-        word (str): A word to initialized the `hangman._SecretWord` object
-            with.
-        letter_once (str): A letter that occurs in the secret word *once*.
-        letter_twice (str): A letter that occurs in the secret word *twice*.
-        letter_none (str): A letter that does not occur in the secret word at
-            all.
+        guess (str): The letter to use as a guess for the secret word.
+        expected (int): The value expected to be returned by the method; the
+            number of times the letter *actually* occurs in the secret word.
     """
 
-    secret_word = hangman._SecretWord(word)
-
-    assert secret_word.guess_letter(letter_once) == 1
-    assert secret_word.guess_letter(letter_twice) == 2
-    assert secret_word.guess_letter(letter_none) == 0
+    assert expected == secret_word.guess_letter(guess)
 
 
-@pytest.mark.parametrize('word,guesses,expected', (
-    ('statement', 'aestx', 'state_e_t'), ('psychology', 'syhoz', '_sy_ho_o_y'),
-    ('hibernation', 'hibnq', 'hib__n__i_n'),
+@pytest.mark.parametrize('guesses,expected', (
+    ('', '___________'), ('aio', 'a___i_a_io_'), ('pcn', '_pp__c____n'),
+    ('ltxy', '___l___t___'), ('qwz', '___________'),
 ))
-def test_secret_word_guess_letter_str(word: str, guesses: str, expected: str):
+def test_secret_word_guess_letter_str(
+    secret_word,
+    guesses: str,
+    expected: str,
+):
     """Tests if `_SecretWord.guess_letter()` correctly changes __str__ value.
 
     Verifies that the `guess_letter()` method in the `hangman._SecretWord`
@@ -76,76 +82,81 @@ def test_secret_word_guess_letter_str(word: str, guesses: str, expected: str):
     into a string.
 
     Args:
-        word (str): A word to initialized the `hangman._SecretWord` object
-            with.
-        guesses (str): A sequence containing all the letters that are to be
-            guessed on for the word.
-        expected (str): The value expected from parsing the secret word into a
-            string, after trying all the guesses from ``guesses``.
+        guesses (str): A sequence of letters that are to be used as guesses
+            for the secret word.
+        expected (str): The value expected to be returned by the method; the
+            secret word (as a string) with only the letters correctly guessed
+            on the secret word revealed, with all other letters replaced with
+            underscores.
     """
-
-    secret_word = hangman._SecretWord(word)
 
     for guess in guesses:
         secret_word.guess_letter(guess)
 
-    assert str(secret_word) == expected
+    assert expected == str(secret_word)
 
 
-@pytest.mark.parametrize('word,wrong_guesses', (
-    ('statement', ('foobar', 'councilor', 'agreement')),
-    ('psychology', ('foobar', 'government', 'physiology')),
-    ('hibernation', ('foobar', 'achievement', 'alternation')),
-))
-def test_secret_word_guess_word(word: str, wrong_guesses: tuple):
-    """TODO
+@pytest.mark.parametrize('guess', ('foobar', 'generation', 'applications'))
+def test_secret_word_guess_word_wrong(secret_word, guess: str):
+    """Tests if `_SecretWord.guess_word()` responds correctly to wrong guesses.
 
-    Args:
-        word (str): A word to initialized the `hangman._SecretWord` object
-            with.
-        wrong_guesses (tuple): A sequence of words to ... TODO
-    """
+    Verifies that the `guess_word()` method in the `hangman._SecretWord` class
+    Does the following in response to an incorrect guess:
 
-    secret_word = hangman._SecretWord(word)
-
-    # the expected value returned by `secret_word.__str__` before the correct
-    # guess is given
-    expected_str = '_' * len(word)
-
-    for guess in wrong_guesses:
-        assert secret_word.guess_word(guess) == False
-        assert secret_word.hidden == True
-        assert str(secret_word) == expected_str
-
-    assert secret_word.guess_word(word) == True
-    assert secret_word.hidden == False
-    assert str(secret_word) == word
-
-
-@pytest.mark.parametrize('word,lives,guesses,expected', (
-    ('statement', 8, '', '_________ · 8 lives'),
-    ('statement', 8, 'aestx', 'state_e_t · 7 lives · X'),
-    ('psychology', 42, '', '__________ · 42 lives'),
-    ('psychology', 42, 'bsyhoz', '_sy_ho_o_y · 40 lives · B Z'),
-    ('hibernation', 13, '', '___________ · 13 lives'),
-    ('hibernation', 13, 'hijvbnq', 'hib__n__i_n · 10 lives · J V Q'),
-))
-def test_game_state_summarize(
-    word: str,
-    lives: int,
-    guesses: str,
-    expected: str,
-):
-    """Tests if `_GameState.summarize()` correctly generates a 1-line summary.
+    1. returns False
+    2. keeps the `hidden` attribute as True
+    3. does not reveal the secret word when parsed into a string
 
     Args:
-        word (str): The word to use as the game's secret word
-        lives (int): TODO
-        guesses (str): TODO
-        expected (str): TODO
+        guess (tuple): A sequence of strings containing the words to use as
+            guesses for the secret word. None of the words in this sequence
+            can match the secret word.
     """
 
-    game_state = hangman._GameState(word, lives)
+    assert not secret_word.guess_word(guess)
+    assert secret_word.hidden
+    assert str(secret_word) == '_' * len(secret_word._slots)
+
+
+def test_secret_word_guess_word_right(secret_word):
+    """Tests if `_SecretWord.guess_word()` responds correctly to right guesses.
+
+    Verifies that the `guess_word()` method in the `hangman._SecretWord` class
+    Does the following in response to a *correct* guess:
+
+    1. returns True
+    2. changes the `hidden` attribute to False
+    3. reveals the secret word when parsed into a string
+
+    Args:
+        None
+    """
+
+    assert secret_word.guess_word(secret_word._word)
+    assert not secret_word.hidden
+    assert str(secret_word) == secret_word._word
+
+
+@pytest.mark.parametrize('guesses,expected', (
+    ('', '___________ · 8 lives'),
+    ('lctn', '___l_c_t__n · 8 lives'),
+    ('apix', 'app_i_a_i__ · 7 lives · X'),
+    ('xyz', '___________ · 5 lives · X Y Z'),
+))
+def test_game_state_summarize(game_state, guesses: str, expected: str):
+    """Tests if `_GameState.summarize()` works correctly.
+
+    Verifies that the `summarize()` method in the `hangman._GameState` class
+    returns the expected 1-line summary after the provided guesses are tried.
+
+    Args:
+        guesses (str): A sequence of letters to use as guesses for the secret
+            word.
+        expected (str): The value expected to be returned by the method; A
+            1-line summary of the game state, listing the secret word (with
+            unguessed letters replaced with underscores), the number of lives
+            remaining, and any wrong letter guesses made (if applicable).
+    """
 
     for guess in guesses:
         game_state.try_guess(guess)
@@ -153,102 +164,89 @@ def test_game_state_summarize(
     assert game_state.summarize() == expected
 
 
-@pytest.mark.parametrize('word,invalid_guesses', (
-    ('statement', ('5', '43', '@', '&%', 'b33f', 'huh?!')),
-    ('psychology', ('8', '291', '#', '*^!', 'm3a7', 'whoa!')),
-    ('hibernation', ('3', '14', '+', '$@()', 'g00s3', 'what?')),
-))
-def test_game_state_try_guess_invalid(word: str, invalid_guesses: tuple):
-    """TODO
+@pytest.mark.parametrize('guess', ('5', '43','@', '&%', 'g00s3', 'huh?!'))
+def test_game_state_try_guess_invalid(game_state, guess: str):
+    """Tests if `_GameState.try_guess()` responds correctly to invalid guesses.
+
+    Verifies that the `try_guess()` method in the `hangman._GameState` class
+    returns the "Please input a letter or word!" message when provided an
+    invalid guess value.
 
     Args:
-        word (str): The word to use as the game's secret word
-        invalid_guesses (str): TODO
+        guess (str): A guess to try on the secret word; must contain at *least*
+            one character not in the Latin alphabet.
     """
 
-    game_state = hangman._GameState(word, 8)
-    expected = "Please input a letter or word!"
+    for _ in range(2):
+        # NOTE: This message should return for invalid guess values, even if
+        # the value was repeated
+        assert game_state.try_guess(guess) == "Please input a letter or word!"
 
-    game_state.try_guess('') == expected
-
-    for guess in invalid_guesses:
-        assert game_state.try_guess(guess) == expected
+    assert game_state.lives == 8 # lives value should not decrease
 
 
-@pytest.mark.parametrize('word,guess_word,guess_letter', (
-    ('statement', 'councilor', 'x'), ('psychology', 'government', 'z'),
-    ('hibernation', 'achievement', 'q'),
+@pytest.mark.parametrize('guess', ('a', 'x', 'foobar'))
+def test_game_state_try_guess_repeated(game_state, guess: str):
+    """Tests if `_GameState.try_guess()` responds correctly to repeat guesses.
+
+    Verifies that the `try_guess()` method in the `hangman._GameState` class
+    returns the "You already made this guess!" message when provided a repeat
+    guess value (i.e. a value that was already passed to the method).
+
+    Args:
+        guess (str): A guess to try on the secret word; must contain *only*
+            letters in the Latin alphabet.
+    """
+
+    game_state.try_guess(guess)
+    expected_lives = game_state.lives
+
+    assert game_state.try_guess(guess) == "You already made this guess!"
+    assert game_state.lives == expected_lives # lives value should not decrease
+
+
+@pytest.mark.parametrize('guess,expected,lowers_lives', (
+    ('foobar', "Sorry, but that was not the correct word", True),
+    ('z', "There are no letter Z's", True),
+    ('n', "There is 1 letter N", False),
+    ('p', "There are 2 letter P's", False),
 ))
-def test_game_state_try_guess_wrong(
-    word: str,
-    guess_word: str,
-    guess_letter: str,
+def test_game_state_try_guess_regular(
+    game_state,
+    guess: str,
+    expected: str,
+    lowers_lives: bool,
 ):
-    """TODO
+    # """TODO
 
-    Args:
-        word (str): The word to use as the game's secret word
-        guess_word (str): TODO
-        guess_letter (str): TODO
-    """
+    # Args:
+    #     guess (str): TODO
+    #     expected (str): TODO
+    #     lowers_lives (bool): TODO
+    # """
 
-    game_state = hangman._GameState(word, 8)
+    assert game_state.try_guess(guess) == expected
+    assert lowers_lives == (game_state.lives == 7)
 
-    response = game_state.try_guess(guess_word)
-    assert response == "Sorry, but that was not the correct word"
+@pytest.mark.parametrize('letter', ('a', 'b', 'x'))
+def test_game_state_generate_count_message(game_state, letter: str):
+    # """TODO
 
-    response = game_state.try_guess(guess_word) # repeat word guess
-    assert response == "You already made this guess!"
+    # Args:
+    #     letter (str): TODO
+    # """
 
-    response = game_state.try_guess(guess_letter)
-    assert response == f"There are no letter {guess_letter.upper()}'s"
-
-    response = game_state.try_guess(guess_letter) # repeat letter guess
-    assert response == "You already made this guess!"
-
-
-@pytest.mark.parametrize('word,guess_single,guess_double', (
-    ('statement', 'a', 'e'), ('psychology', 'p', 'y'),
-    ('hibernation', 'h', 'i'),
-))
-def test_game_state_try_guess_count(
-    word: str,
-    guess_single: str,
-    guess_double: str,
-):
-    """TODO
-
-    Args:
-        word (str): The word to use as the game's secret word
-        guess_single (str): TODO
-        guess_double (str): TODO
-    """
-
-    game_state = hangman._GameState(word, 8)
-
-    response = game_state.try_guess(guess_single)
-    assert response == f"There is 1 letter {guess_single.upper()}"
-
-    response = game_state.try_guess(guess_double)
-    assert response == f"There are 2 letter {guess_double.upper()}'s"
-
-
-@pytest.mark.parametrize('letter', ('a', 'A', 'b', 'B', 'x', 'X'))
-def test_game_state_generate_count_message(letter: str):
-    """TODO
-
-    Args:
-        letter (str): TODO
-    """
-
-    game_state = hangman._GameState('foobar', 8)
     letter_upper = letter.upper()
 
-    message = game_state._generate_count_message(0, letter)
-    assert message == f"There are no letter {letter_upper}'s"
+    expected_messages = (
+        f"There are no letter {letter_upper}'s",
+        f"There is 1 letter {letter_upper}",
+        f"There are 2 letter {letter_upper}'s",
+    )
 
-    message = game_state._generate_count_message(1, letter)
-    assert message == f"There is 1 letter {letter_upper}"
+    for i, expected in enumerate(expected_messages):
+        actual_lower = game_state._generate_count_message(i, letter)
+        actual_upper = game_state._generate_count_message(i, letter_upper)
 
-    message = game_state._generate_count_message(2, letter)
-    assert message == f"There are 2 letter {letter_upper}'s"
+        assert actual_lower == actual_upper
+        assert actual_upper == expected

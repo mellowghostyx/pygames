@@ -8,11 +8,11 @@ HANGMAN_LAUNCH = pygames.hangman.Hangman.lazy_launch
 
 @pytest.fixture
 def fresh_app() -> pygames.Application:
-    """TODO
+    # """TODO
 
-    Returns:
-        pygames.Application: TODO
-    """
+    # Returns:
+    #     pygames.Application: TODO
+    # """
 
     return pygames.Application()
 
@@ -27,13 +27,13 @@ def test_application_parse_arguments(
     expected_action: FunctionType,
     expected_kwargs: dict,
 ):
-    """TODO
+    # """TODO
 
-    Args:
-        argv (str): TODO
-        expected_action (FunctionType): TODO
-        expected_kwargs (dict): TODO
-    """
+    # Args:
+    #     argv (str): TODO
+    #     expected_action (FunctionType): TODO
+    #     expected_kwargs (dict): TODO
+    # """
 
     action, kwargs = fresh_app._parse_arguments(argv.split())
 
@@ -49,12 +49,12 @@ def test_application_parse_arguments(
     ('hangman -l -1', 'invalid config'),
 ))
 def test_application_run_error(fresh_app, argv: str, expected: str):
-    """TODO
+    # """TODO
 
-    Args:
-        argv (str): TODO
-        expected (str): TODO
-    """
+    # Args:
+    #     argv (str): TODO
+    #     expected (str): TODO
+    # """
 
     with pytest.raises(pygames.BadArgumentError, match=expected):
         fresh_app.run(*argv.split())
