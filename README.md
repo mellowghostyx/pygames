@@ -14,8 +14,10 @@ repository, like so:
 pipx install git+https://github.com/mellowghostyx/pygames.git
 ```
 
-Then check to see if the program was installed correctly:
+Alternatively, you can download the latest release version as either an
+**sdist** file (*.tar.gz*) or a **wheel** file (*.whl*). Then, you can use pipx
+to install the application from the file:
 
 ```
-pygames --version
+pipx install pygames-X.Y.Z-py3-none-any.whl
 ```
