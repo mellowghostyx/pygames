@@ -260,7 +260,7 @@ class Hangman:
         all_words = requests.get(self._WORDLIST_URL).text.rstrip().split()
         self._wordlist = tuple(filter(lambda x: 5 <= len(x) <= 12, all_words))
 
-    def launch(self, lives: int = 8):
+    def launch(self, endless: bool = False, lives: int = 8):
         """Starts a fresh game of Hangman.
 
         Launches a game of Hangman with a randomly selected word as the secret
@@ -270,11 +270,13 @@ class Hangman:
             lives (int): The number of lives to start off with (default: 8).
         """
 
+        # error checking
         if not isinstance(lives, int):
             raise TypeError(f"expected int, given {type(lives).__name__}")
         elif lives < 1:
             raise ValueError("cannot start with less than 1 life")
 
+        original_lives = lives
         game_state = _GameState(random.choice(self._wordlist), lives)
 
         while game_state.lives and game_state.secret_word.hidden:
@@ -294,8 +296,12 @@ class Hangman:
         print("You win!" if game_state.lives else "Game over!")
         print(f"The secret word was \"{game_state.secret_word}\"")
 
+        if endless:
+            print() # newline
+            self.launch(True, original_lives)
+
     @classmethod
-    def lazy_launch(cls, lives: int = 8):
+    def lazy_launch(cls, endless: bool = False, lives: int = 8):
         """Loads necessary game data before starting a game of Hangman.
 
         Launches a game of hangman after lazily loading the necessary data from

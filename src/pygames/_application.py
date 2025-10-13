@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from types import FunctionType
 
 from .hangman import Hangman
-
+from .magic8ball import ask_magic_8_ball
 
 def _get_module_version():
     """Retrieves the version number of this application.
@@ -114,12 +114,26 @@ class Application:
     )
     _GAMES = (
         _Subcommand('hangman', Hangman.lazy_launch, "play Hangman", (
+            _AppOption(('-e', '--endless'), {
+                'action': 'store_true',
+                'help': "automatically start a new game after the previous",
+            }),
             _AppOption(('-l', '--lives'), {
                 'type': int,
                 'default': 8,
                 'help': "number of lives to start with (default: %(default)s)",
             }),
         )),
+        _Subcommand(
+            'magic8ball', ask_magic_8_ball, "ask the magic 8 ball a question",
+            (
+                _AppOption(('-e', '--endless'), {
+                    'action': 'store_true',
+                    'help': "automatically prompt a new question after the "\
+                        "previous",
+                }),
+            ),
+        ),
     )
 
     def __init__(self):
