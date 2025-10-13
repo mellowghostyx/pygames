@@ -4,11 +4,30 @@ from src.pygames import hangman
 
 @pytest.fixture
 def secret_word() -> hangman._SecretWord:
+    """Creates a new `hangman._SecretWord` object.
+
+    Initializes and returns a new `hangman._SecretWord` object with
+    "application" set as the the secret word hidden by it.
+
+    Returns:
+        hangman._SecretWord: The aforementioned object.
+    """
+
     return hangman._SecretWord('application')
 
 
 @pytest.fixture
 def game_state() -> hangman._GameState:
+    """Creates a new `hangman._GameState` object.
+
+    Initializes and returns a new `hangman._GameState` object with
+    "application" set as the secret word and the initial number of lives set
+    as 8.
+
+    Returns:
+        hangman._GameState: The aforementioned object.
+    """
+
     return hangman._GameState('application', 8)
 
 
@@ -58,7 +77,7 @@ def test_secret_word_guess_letter_count(
     that letter occurs in the secret word.
 
     Args:
-        guess (str): The letter to use as a guess for the secret word.
+        guess (str): A letter to try guessing the secret word with.
         expected (int): The value expected to be returned by the method; the
             number of times the letter *actually* occurs in the secret word.
     """
@@ -82,8 +101,8 @@ def test_secret_word_guess_letter_str(
     into a string.
 
     Args:
-        guesses (str): A sequence of letters that are to be used as guesses
-            for the secret word.
+        guesses (str): A sequence of letters to try guessing the secret word
+            with.
         expected (str): The value expected to be returned by the method; the
             secret word (as a string) with only the letters correctly guessed
             on the secret word revealed, with all other letters replaced with
@@ -108,9 +127,8 @@ def test_secret_word_guess_word_wrong(secret_word, guess: str):
     3. does not reveal the secret word when parsed into a string
 
     Args:
-        guess (tuple): A sequence of strings containing the words to use as
-            guesses for the secret word. None of the words in this sequence
-            can match the secret word.
+        guess (tuple): A collection of words to try guessing the secret word
+            with. None of the words can match the secret word.
     """
 
     assert not secret_word.guess_word(guess)
@@ -150,8 +168,8 @@ def test_game_state_summarize(game_state, guesses: str, expected: str):
     returns the expected 1-line summary after the provided guesses are tried.
 
     Args:
-        guesses (str): A sequence of letters to use as guesses for the secret
-            word.
+        guesses (str): A sequence of letters to try guessing the secret word
+            with.
         expected (str): The value expected to be returned by the method; A
             1-line summary of the game state, listing the secret word (with
             unguessed letters replaced with underscores), the number of lives
@@ -173,8 +191,9 @@ def test_game_state_try_guess_invalid(game_state, guess: str):
     invalid guess value.
 
     Args:
-        guess (str): A guess to try on the secret word; must contain at *least*
-            one character not in the Latin alphabet.
+        guess (str): A string of characters to try guessing the secret word
+            with; must contain at *least* one character not in the Latin
+            alphabet.
     """
 
     for _ in range(2):
@@ -194,8 +213,8 @@ def test_game_state_try_guess_repeated(game_state, guess: str):
     guess value (i.e. a value that was already passed to the method).
 
     Args:
-        guess (str): A guess to try on the secret word; must contain *only*
-            letters in the Latin alphabet.
+        guess (str): A letter or word to try guessing the secret word with;
+            must consist *only* of letters in the Latin alphabet.
     """
 
     game_state.try_guess(guess)
@@ -217,24 +236,37 @@ def test_game_state_try_guess_regular(
     expected: str,
     lowers_lives: bool,
 ):
-    # """TODO
+    """Tests if `_GameState.try_guess()` responds correctly to normal guesses.
 
-    # Args:
-    #     guess (str): TODO
-    #     expected (str): TODO
-    #     lowers_lives (bool): TODO
-    # """
+    Verifies that the `try_guess()` method in the `hangman._GameState` class
+    returns the correct message for what type of guess it was given (i.e.
+    whether the guess was a letter or a word) and how accurate the guess was
+    (i.e. how many letters in the secret word match a provided letter guess).
+
+    Args:
+        guess (str): A letter or word to try guessing the secret word with;
+            must consist *only* of letters in the Latin alphabet.
+        expected (str): The message expected to be returned by the method when
+            provided the ``guess`` value as its parameter.
+        lowers_lives (bool): Whether or not the guess is expected to decrease
+            the number of lives held by the game state by one.
+    """
 
     assert game_state.try_guess(guess) == expected
     assert lowers_lives == (game_state.lives == 7)
 
 @pytest.mark.parametrize('letter', ('a', 'b', 'x'))
 def test_game_state_generate_count_message(game_state, letter: str):
-    # """TODO
+    """Tests if `_GameState._generate_count_message()` works correctly.
 
-    # Args:
-    #     letter (str): TODO
-    # """
+    Verifies that the `_generate_count_message()` method in the
+    `hangman._GameState` class generates and returns the correct message
+    corresponding to the `count` and `letter` values given to it.
+
+    Args:
+        letter (str): A letter to use in the message as the thing being
+            "counted."
+    """
 
     letter_upper = letter.upper()
 

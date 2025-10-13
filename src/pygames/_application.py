@@ -189,14 +189,22 @@ class Application:
 
         subparser.set_defaults(function=subcommand.action)
 
-    def _parse_arguments(self, argv: list | tuple):
-        """TODO
+    def _parse_arguments(self, argv: tuple):
+        """Takes CLI arguments and returns the expected function and options.
+
+        Parses a sequence of command-line argument tokens and returns both a
+        function corresponding to a subcommand called in the provided
+        arguments, and a dictionary listing all arguments specified for the
+        function in the provided arguments.
 
         Args:
-            argv (list | tuple): TODO
+            argv (tuple): A sequence of argument tokens, representing those
+                inputed to the terminal or command-line for a CLI application.
 
         Returns:
-            tuple: TODO
+            tuple: Consists of the primary function/action called by the
+                subcommand (if applicable), and a dictionary itemizing any
+                and all options specified by the provided ``argv`` arguments.
         """
 
         args = vars(self._parser.parse_args(argv))
