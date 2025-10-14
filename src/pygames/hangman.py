@@ -267,7 +267,14 @@ class Hangman:
         word, and the provided lives to start with.
 
         Args:
+            endless (bool): Whether or not to automatically start a new game
+                after the previous one ends (default: False).
             lives (int): The number of lives to start off with (default: 8).
+
+        Raises:
+            TypeError: the value of ``lives`` must be an integer (`int`).
+            ValueError: the value of ``lives`` cannot be less than 1; cannot
+                start with less than 1 life.
         """
 
         # error checking
@@ -300,21 +307,31 @@ class Hangman:
             print() # newline
             self.launch(True, original_lives)
 
-    @classmethod
-    def lazy_launch(cls, endless: bool = False, lives: int = 8):
-        """Loads necessary game data before starting a game of Hangman.
 
-        Launches a game of hangman after lazily loading the necessary data from
-        the Hangman class. This is intended for applications where the game
-        needs to boot from a single function, without pre-loading any data for
-        a Hangman object.
+def play_hangman(endless: bool = False, lives: int = 8):
+    """Starts a fresh game of Hangman.
 
-        Args:
-            lives (int): The number of lives to start off with (default: 8).
-        """
+    Creates a new `Hangman` object and runs the `launch()` method to start a
+    game of hangman.
 
-        cls().launch(lives)
+    Note:
+        This function is intended for cases where the hangman game needs to be
+        launched from a single function, and where the `Hangman` object cannot
+        be initialized beforehand.
+
+    Args:
+        endless (bool): Whether or not to automatically start a new game after
+            the previous one ends (default: False).
+        lives (int): The number of lives to start off with (default: 8).
+
+    Raises:
+        TypeError: the value of ``lives`` must be an integer (`int`).
+        ValueError: the value of ``lives`` cannot be less than 1; cannot start
+            with less than 1 life.
+    """
+
+    Hangman().launch(endless, lives)
 
 
 if __name__ == '__main__':
-    Hangman.lazy_launch()
+    play_hangman()

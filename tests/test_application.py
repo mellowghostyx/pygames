@@ -2,8 +2,7 @@ import pytest
 from types import FunctionType
 
 from src import pygames
-
-HANGMAN_LAUNCH = pygames.hangman.Hangman.lazy_launch
+from src.pygames import hangman, magic8ball
 
 
 @pytest.fixture
@@ -18,10 +17,14 @@ def fresh_app() -> pygames.Application:
 
 
 @pytest.mark.parametrize('argv,expected_action,expected_kwargs', (
-    ('hangman', HANGMAN_LAUNCH, {'lives': 8}),
-    ('hangman -l 73', HANGMAN_LAUNCH, {'lives': 73}),
+    ('hangman', hangman.play_hangman, {'endless': False, 'lives': 8}),
+    ('hangman -e', hangman.play_hangman, {'endless': True, 'lives': 8}),
+    ('hangman -l 73', hangman.play_hangman, {'endless': False, 'lives': 73}),
+    ('hangman -e -l 3', hangman.play_hangman, {'endless': True, 'lives': 3}),
+    ('magic8ball', magic8ball.ask_magic_8_ball, {'endless': False}),
+    ('magic8ball -e', magic8ball.ask_magic_8_ball, {'endless': True}),
 ))
-def test_application_parse_arguments(
+def test_application_parse_arguments_basic(
     fresh_app,
     argv: str,
     expected_action: FunctionType,

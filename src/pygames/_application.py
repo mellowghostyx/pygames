@@ -3,8 +3,8 @@ import pathlib
 from dataclasses import dataclass
 from types import FunctionType
 
-from .hangman import Hangman
-from .magic8ball import ask_magic_8_ball
+from . import hangman
+from . import magic8ball
 
 def _get_module_version():
     """Retrieves the version number of this application.
@@ -113,7 +113,7 @@ class Application:
         }),
     )
     _GAMES = (
-        _Subcommand('hangman', Hangman.lazy_launch, "play Hangman", (
+        _Subcommand('hangman', hangman.play_hangman, "play Hangman", (
             _AppOption(('-e', '--endless'), {
                 'action': 'store_true',
                 'help': "automatically start a new game after the previous",
@@ -125,7 +125,9 @@ class Application:
             }),
         )),
         _Subcommand(
-            'magic8ball', ask_magic_8_ball, "ask the magic 8 ball a question",
+            'magic8ball',
+            magic8ball.ask_magic_8_ball,
+            "ask the magic 8 ball a question",
             (
                 _AppOption(('-e', '--endless'), {
                     'action': 'store_true',
