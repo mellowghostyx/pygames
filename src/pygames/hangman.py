@@ -308,30 +308,41 @@ class Hangman:
             self.launch(True, original_lives)
 
 
-def play_hangman(endless: bool = False, lives: int = 8):
-    """Starts a fresh game of Hangman.
-
-    Creates a new `Hangman` object and runs the `launch()` method to start a
-    game of hangman.
-
-    Note:
-        This function is intended for cases where the hangman game needs to be
-        launched from a single function, and where the `Hangman` object cannot
-        be initialized beforehand.
-
-    Args:
-        endless (bool): Whether or not to automatically start a new game after
-            the previous one ends (default: False).
-        lives (int): The number of lives to start off with (default: 8).
-
-    Raises:
-        TypeError: the value of ``lives`` must be an integer (`int`).
-        ValueError: the value of ``lives`` cannot be less than 1; cannot start
-            with less than 1 life.
-    """
+def main(endless: bool = False, lives: int = 8):
+    """Play a game of hangman."""
 
     Hangman().launch(endless, lives)
 
 
 if __name__ == '__main__':
-    play_hangman()
+    import argparse
+    import inspect
+
+    parser = argparse.ArgumentParser(
+        prog=__file__.split('/')[-1],
+        usage="%(prog)s [options]",
+        description=main.__doc__,
+    )
+
+    for parameter in inspect.signature(main).parameters.values():
+        flags = (
+            f'-{parameter.name[0]}',
+            f'--{parameter.name.replace('_', '-')}',
+        )
+
+        config = dict()
+
+        if parameter.annotation == bool:
+            # HACK
+            action_value = 'store_false' if parameter.default else 'store_true'
+            config['action'] = action_value
+        else:
+            config['type'] = parameter.annotation # HACK
+            config['default'] = parameter.default # HACK
+
+        # config['help'] = self._OPTION_HELP[parameter.name]
+
+        parser.add_argument(*flags, **config)
+
+    args = vars(parser.parse_args())
+    main(**args)

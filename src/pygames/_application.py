@@ -1,10 +1,11 @@
 import argparse
+import inspect
 import pathlib
 from dataclasses import dataclass
-from types import FunctionType
+from types import FunctionType, ModuleType
 
 from . import hangman
-from . import magic8ball
+from . import magic_8_ball
 
 def _get_module_version():
     """Retrieves the version number of this application.
@@ -58,103 +59,36 @@ class _ArgumentParser(argparse.ArgumentParser):
         raise BadArgumentError(message)
 
 
-@dataclass
-class _AppOption:
-    """An optional argument for a command-line application.
-
-    Configuration data that is to be passed to the argument parser to register
-    a new optional command-line argument for a command-line application.
-
-    Attributes:
-        flags (str): The flags representing this option in the command
-            line. Typically this consists of a short flag: a single hyphen
-            followed by a single letter, and a long flag: two hyphens followed
-            by one or more words, with multiple words being delimited by a
-            single hyphen.
-        config (dict): Additional configuration details for this option, which
-            are to be registered by the command-line parser for this option.
-    """
-
-    flags: tuple
-    config: dict
-
-
-@dataclass
-class _Subcommand:
-    """A subcommand for a command-line application.
-
-    Configuration data that is to be passed to the argument parser to register
-    a new subcommand for a command-line application.
-
-    Attributes:
-        name (str): The name for the subcommand.
-        action (FunctionType): The function to run when the subcommand is
-            called.
-        description (str): A brief description of what the subcommand does.
-        options (tuple): A collection of _AppOption objects representing the
-            command-line options that are to be registered to the subcommand.
-    """
-
-    name: str
-    action: FunctionType
-    description: str
-    options: tuple
-
-
 class Application:
     """The PyGames application itself, wrapped into a single class."""
 
-    global __version__
-
-    _OPTIONS = (
-        _AppOption(('-v', '--version'), {
-            'action': 'version',
-            'version': f"%(prog)s {__version__}",
-        }),
-    )
-    _GAMES = (
-        _Subcommand('hangman', hangman.play_hangman, "play Hangman", (
-            _AppOption(('-e', '--endless'), {
-                'action': 'store_true',
-                'help': "automatically start a new game after the previous",
-            }),
-            _AppOption(('-l', '--lives'), {
-                'type': int,
-                'default': 8,
-                'help': "number of lives to start with (default: %(default)s)",
-            }),
-        )),
-        _Subcommand(
-            'magic8ball',
-            magic8ball.ask_magic_8_ball,
-            "ask the magic 8 ball a question",
-            (
-                _AppOption(('-e', '--endless'), {
-                    'action': 'store_true',
-                    'help': "automatically prompt a new question after the "\
-                        "previous",
-                }),
-            ),
-        ),
-    )
+    _OPTION_HELP = {
+        'endless': "automatically start a new game after the previous",
+        'lives': "number of lives to start with (default: %(default)s)",
+    }
 
     def __init__(self):
+        global __version__
+
         self._parser = _ArgumentParser(
             prog='pygames',
             usage="%(prog)s [options] [command] ...",
             description="A collection of small CLI games written in Python",
         )
 
-        for option in self._OPTIONS:
-            self._parser.add_argument(*option.flags, **option.config)
+        self._parser.add_argument(
+            '-v', '--version',
+            action='version',
+            version=f'%(prog)s {__version__}',
+        )
 
         subparsers = self._parser.add_subparsers(
             prog=self._parser.prog,
             required=True,
         )
 
-        for game in self._GAMES:
-            self._add_subcommand(subparsers, game)
+        for module in (hangman, magic_8_ball):
+            self._add_subcommand(subparsers, module)
 
     def run(self, *argv): # HACK: optimize!
         """Runs PyGames with the provided arguments.
@@ -180,32 +114,49 @@ class Application:
     def _add_subcommand(
         self,
         subparsers: argparse._SubParsersAction,
-        subcommand: _Subcommand,
+        module: ModuleType,
     ):
-        """Adds the provided subcommand to the argument parser.
+        """TODO"""
 
-        Args:
-            subparsers (argparse._SubParsersAction): A pointer to the
-                configuration data for all subparsers added to the main
-                argument parser. The subcommand, and any other arguments tied
-                to it, must be interpreted through a dedicated subparser,
-                hence why this object is required.
-            subcommand (_Subcommand): Configuration data for the subcommand.
-        """
+        main_function: FunctionType = getattr(module, 'main')
+        name_final_dot = module.__name__.rfind('.')
 
         subparser = subparsers.add_parser(
-            subcommand.name,
+            module.__name__[name_final_dot+1:].replace('_', '-'),
             usage="%(prog)s [options]",
-            help=subcommand.description,
-            description=subcommand.description.capitalize(),
+            help=main_function.__doc__.lower(), # HACK
+            description=main_function.__doc__,
         )
 
-        for option in subcommand.options:
-            subparser.add_argument(*option.flags, **option.config)
+        for parameter in inspect.signature(main_function).parameters.values():
+            flags, config = self._get_arg_info(parameter)
+            subparser.add_argument(*flags, **config)
 
-        subparser.set_defaults(function=subcommand.action)
+        subparser.set_defaults(function=main_function)
 
-    def _parse_arguments(self, argv: tuple):
+    def _get_arg_info(self, parameter: inspect.Parameter) -> (tuple, dict):
+        """TODO"""
+
+        flags = (
+            f'-{parameter.name[0]}',
+            f'--{parameter.name.replace('_', '-')}',
+        )
+
+        config = dict()
+
+        if parameter.annotation == bool:
+            # HACK
+            action_value = 'store_false' if parameter.default else 'store_true'
+            config['action'] = action_value
+        else:
+            config['type'] = parameter.annotation # HACK
+            config['default'] = parameter.default # HACK
+
+        config['help'] = self._OPTION_HELP[parameter.name]
+
+        return (flags, config)
+
+    def _parse_arguments(self, argv: tuple) -> (FunctionType, dict):
         """Takes CLI arguments and returns the expected function and options.
 
         Parses a sequence of command-line argument tokens and returns both a

@@ -24,7 +24,7 @@
 
 import random
 
-_answers = (
+_ANSWERS = (
     "It is certain",
     "It is decidedly so",
     "Without a doubt",
@@ -48,8 +48,10 @@ _answers = (
 )
 
 
-def ask_magic_8_ball(endless: bool = False):
-    global _answers
+def main(endless: bool = False):
+    """Ask the magic 8 ball a question."""
+
+    global _ANSWERS
 
     try:
         input("Your question: ") # NOTE: does not *actually* need the answer
@@ -57,12 +59,42 @@ def ask_magic_8_ball(endless: bool = False):
         print("\nGoodbye!")
         return
 
-    print("The magic 8-ball says:", random.choice(_answers))
+    print("The magic 8-ball says:", random.choice(_ANSWERS))
 
     if endless:
         print() # newline
-        ask_magic_8_ball(True)
+        main(True)
 
 
 if __name__ == '__main__':
-    ask_magic_8_ball()
+    import argparse
+    import inspect
+
+    parser = argparse.ArgumentParser(
+        prog=__file__.split('/')[-1],
+        usage="%(prog)s [options]",
+        description=main.__doc__,
+    )
+
+    for parameter in inspect.signature(main).parameters.values():
+        flags = (
+            f'-{parameter.name[0]}',
+            f'--{parameter.name.replace('_', '-')}',
+        )
+
+        config = dict()
+
+        if parameter.annotation == bool:
+            # HACK
+            action_value = 'store_false' if parameter.default else 'store_true'
+            config['action'] = action_value
+        else:
+            config['type'] = parameter.annotation # HACK
+            config['default'] = parameter.default # HACK
+
+        # config['help'] = self._OPTION_HELP[parameter.name]
+
+        parser.add_argument(*flags, **config)
+
+    args = vars(parser.parse_args())
+    main(**args)
