@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2025 MellowGhostyx
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -64,37 +62,3 @@ def main(endless: bool = False):
     if endless:
         print() # newline
         main(True)
-
-
-if __name__ == '__main__':
-    import argparse
-    import inspect
-
-    parser = argparse.ArgumentParser(
-        prog=__file__.split('/')[-1],
-        usage="%(prog)s [options]",
-        description=main.__doc__,
-    )
-
-    for parameter in inspect.signature(main).parameters.values():
-        flags = (
-            f'-{parameter.name[0]}',
-            f'--{parameter.name.replace('_', '-')}',
-        )
-
-        config = dict()
-
-        if parameter.annotation == bool:
-            # HACK
-            action_value = 'store_false' if parameter.default else 'store_true'
-            config['action'] = action_value
-        else:
-            config['type'] = parameter.annotation # HACK
-            config['default'] = parameter.default # HACK
-
-        # config['help'] = self._OPTION_HELP[parameter.name]
-
-        parser.add_argument(*flags, **config)
-
-    args = vars(parser.parse_args())
-    main(**args)

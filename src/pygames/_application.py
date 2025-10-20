@@ -116,7 +116,12 @@ class Application:
         subparsers: argparse._SubParsersAction,
         module: ModuleType,
     ):
-        """TODO"""
+        """TODO
+
+        Args:
+            subparsers (argparse._SubParsersAction): TODO
+            module (ModuleType): TODO
+        """
 
         main_function: FunctionType = getattr(module, 'main')
         name_final_dot = module.__name__.rfind('.')
@@ -128,33 +133,83 @@ class Application:
             description=main_function.__doc__,
         )
 
+        # used to keep track of all the 1-letter flags used by the arguments
+        # registered for this subcommand, so that no two arguments share the
+        # same short flag
+        short_flags = set()
+
         for parameter in inspect.signature(main_function).parameters.values():
-            flags, config = self._get_arg_info(parameter)
+            flags, config = self._create_argument_data(short_flags, parameter)
             subparser.add_argument(*flags, **config)
 
         subparser.set_defaults(function=main_function)
 
-    def _get_arg_info(self, parameter: inspect.Parameter) -> (tuple, dict):
-        """TODO"""
+    def _create_argument_data(
+        self,
+        short_flags: set,
+        parameter: inspect.Parameter,
+    ) -> (tuple, dict):
+        """TODO
 
-        flags = (
-            f'-{parameter.name[0]}',
-            f'--{parameter.name.replace('_', '-')}',
-        )
+        Args:
+            short_flags (set): TODO
+            parameter (inspect.Parameter): TODO
 
+        Returns:
+            tuple: TODO
+            dict: TODO
+        """
+
+        flags = self._create_argument_flags(short_flags, parameter)
         config = dict()
 
-        if parameter.annotation == bool:
-            # HACK
+        if parameter.name in self._OPTION_HELP.keys():
+            config['help'] = self._OPTION_HELP[parameter.name]
+
+        has_annotation = parameter.annotation != inspect.Parameter.empty
+        has_default = parameter.default != inspect.Parameter.empty
+
+        if has_default and parameter.annotation == bool:
             action_value = 'store_false' if parameter.default else 'store_true'
             config['action'] = action_value
-        else:
-            config['type'] = parameter.annotation # HACK
-            config['default'] = parameter.default # HACK
 
-        config['help'] = self._OPTION_HELP[parameter.name]
+            return (flags, config)
+
+        if has_annotation: config['type'] = parameter.annotation
+        if has_default: config['default'] = parameter.default
 
         return (flags, config)
+
+    def _create_argument_flags(
+        self,
+        short_flags: set,
+        parameter: inspect.Parameter,
+    ) -> tuple:
+        """TODO"""
+
+        argument_name = parameter.name.replace('_', '-')
+
+        # A parameter with no default value will be parsed into a positional
+        # argument; all positional arguments must be given its full-length,
+        # non-hyphenated name as its flag.
+        if parameter.default == inspect.Parameter.empty:
+            return (argument_name,)
+
+        long_flag = f'--{argument_name}'
+        short_flag = f'-{argument_name[0]}'
+
+        # Make the short flag use an uppercase letter if the lowercase variant
+        # is already in use
+        if short_flag in short_flags:
+            short_flag = short_flag.upper()
+
+        # If both the lowercase and uppercase short flag forms are already in
+        # use, return only a long flag
+        if short_flag in short_flags:
+            return (long_flag,)
+
+        short_flags.add(short_flag)
+        return (short_flag, long_flag)
 
     def _parse_arguments(self, argv: tuple) -> (FunctionType, dict):
         """Takes CLI arguments and returns the expected function and options.
@@ -169,9 +224,10 @@ class Application:
                 inputed to the terminal or command-line for a CLI application.
 
         Returns:
-            tuple: Consists of the primary function/action called by the
-                subcommand (if applicable), and a dictionary itemizing any
-                and all options specified by the provided ``argv`` arguments.
+            FunctionType: the primary function/action called by the
+                subcommand (if applicable).
+            dict: itemizing any and all options specified by the provided
+                ``argv`` arguments.
         """
 
         args = vars(self._parser.parse_args(argv))
