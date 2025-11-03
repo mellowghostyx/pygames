@@ -332,4 +332,4 @@ def main(endless: bool = False, lives: int = 8):
 
     if endless:
         print() # newline
-        self.launch(True, original_lives)
+        main(True, original_lives)
