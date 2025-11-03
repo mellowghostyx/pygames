@@ -36,6 +36,8 @@ run the file directly.
 import random
 import requests
 
+_WORDLIST_URL = 'https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-no-swears.txt'
+
 
 class _SecretLetter:
     """A hidden letter, only to be revealed with a correct guess.
@@ -249,64 +251,85 @@ class _GameState:
         return f"There {copula} {count} letter {letter.upper()}{num_marker}"
 
 
-class Hangman:
-    """Runner for a command-line implementation of Hangman."""
+def _validate_lives(lives: int):
+    """TODO
 
-    _WORDLIST_URL = 'https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-no-swears.txt'
+    Args:
+        lives (int): TODO
+    """
 
-    def __init__(self):
-        all_words = requests.get(self._WORDLIST_URL).text.rstrip().split()
-        self._wordlist = tuple(filter(lambda x: 5 <= len(x) <= 12, all_words))
+    if not isinstance(lives, int):
+        raise TypeError(f"expected integer, given '{type(lives).__name__}'")
+    elif lives < 1:
+        raise ValueError("cannot start game with less than 1 life")
 
-    def launch(self, endless: bool = False, lives: int = 8):
-        """Starts a fresh game of Hangman.
 
-        Launches a game of Hangman with a randomly selected word as the secret
-        word, and the provided lives to start with.
+def _get_random_word():
+    """TODO
 
-        Args:
-            endless (bool): Whether or not to automatically start a new game
-                after the previous one ends (default: False).
-            lives (int): The number of lives to start off with (default: 8).
+    Returns:
+        str: A random word between 5 and 12 letters in length.
+    """
 
-        Raises:
-            TypeError: the value of ``lives`` must be an integer (`int`).
-            ValueError: the value of ``lives`` cannot be less than 1; cannot
-                start with less than 1 life.
-        """
+    global _WORDLIST_URL
 
-        # error checking
-        if not isinstance(lives, int):
-            raise TypeError(f"expected int, given {type(lives).__name__}")
-        elif lives < 1:
-            raise ValueError("cannot start with less than 1 life")
+    all_words = requests.get(_WORDLIST_URL).text.rstrip().split()
+    valid_words = tuple(filter(lambda x: 5 <= len(x) <= 12, all_words))
+    return random.choice(valid_words)
 
-        original_lives = lives
-        game_state = _GameState(random.choice(self._wordlist), lives)
 
-        while game_state.lives and game_state.secret_word.hidden:
-            print(game_state.summarize())
+def _ask_for_guess(game_state: _GameState):
+    """TODO
 
-            try:
-                guess = input("your guess: ")
-            except EOFError: # return early if user hits CTRL+D / EOF
-                print('\nGoodbye!')
-                return None
+    Args:
+        game_state (_GameState): TODO
+    """
 
-            result_msg = game_state.try_guess(guess.lower())
-            if result_msg: print(result_msg)
-            print() # newline
+    print(game_state.summarize())
 
-        game_state.secret_word.hidden = False
-        print("You win!" if game_state.lives else "Game over!")
-        print(f"The secret word was \"{game_state.secret_word}\"")
+    try:
+        guess = input("your guess: ")
+    except EOFError: # return early if user hits CTRL+D / EOF
+        print('\nGoodbye!')
+        exit()
 
-        if endless:
-            print() # newline
-            self.launch(True, original_lives)
+    result_msg = game_state.try_guess(guess.lower())
+
+    if result_msg:
+        print(result_msg)
+
+    print() # newline
 
 
 def main(endless: bool = False, lives: int = 8):
-    """Play a game of hangman."""
+    """Play a game of hangman.
 
-    Hangman().launch(endless, lives)
+    Starts a game of Hangman with a randomly selected word as the secret
+    word, and the provided lives to start with.
+
+    Args:
+        endless (bool): Whether or not to automatically start a new game after
+            the previous one ends (default: False).
+        lives (int): The number of lives to start off with (default: 8).
+
+    Raises:
+        TypeError: ``lives`` must be an integer (`int`).
+        ValueError: ``lives`` cannot be less than 1; cannot start with less
+            than 1 life.
+    """
+
+    _validate_lives(lives)
+
+    original_lives = lives
+    game_state = _GameState(_get_random_word(), lives)
+
+    while game_state.lives and game_state.secret_word.hidden:
+        _ask_for_guess(game_state)
+
+    game_state.secret_word.hidden = False
+    print("You win!" if game_state.lives else "Game over!")
+    print(f"The secret word was \"{game_state.secret_word}\"")
+
+    if endless:
+        print() # newline
+        self.launch(True, original_lives)

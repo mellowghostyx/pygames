@@ -124,13 +124,14 @@ class Application:
         """
 
         main_function: FunctionType = getattr(module, 'main')
-        name_final_dot = module.__name__.rfind('.')
+        function_docstring = main_function.__doc__ or ''
+        short_summary = function_docstring[:function_docstring.find('\n')+1]
 
         subparser = subparsers.add_parser(
-            module.__name__[name_final_dot+1:].replace('_', '-'),
+            module.__name__[module.__name__.rfind('.')+1:].replace('_', '-'),
             usage="%(prog)s [options]",
-            help=main_function.__doc__.lower(), # HACK
-            description=main_function.__doc__,
+            help=short_summary.lower(),
+            description=short_summary,
         )
 
         # used to keep track of all the 1-letter flags used by the arguments
@@ -185,7 +186,22 @@ class Application:
         short_flags: set,
         parameter: inspect.Parameter,
     ) -> tuple:
-        """TODO"""
+        """TODO
+
+        Args:
+            short_flags (set): A collection of all 1-letter argument flags that
+                have been registered for other arguments. This is used to
+                prevent returning a short (1 letter long) flag that is already
+                registered for another argument. Note that if this method adds
+                a new short flag to the return value, the short flag will also
+                be added to this collection.
+            parameter (inspect.Parameter): TODO
+
+        Returns:
+            tuple: Contains all the argument flags that are to be registered
+                for the provided parameter; Typically consists of one or two
+                string values representing each of the flags.
+        """
 
         argument_name = parameter.name.replace('_', '-')
 
@@ -224,9 +240,9 @@ class Application:
                 inputed to the terminal or command-line for a CLI application.
 
         Returns:
-            FunctionType: the primary function/action called by the
+            FunctionType: The primary function/action called by the
                 subcommand (if applicable).
-            dict: itemizing any and all options specified by the provided
+            dict: Contains any and all options specified by the provided
                 ``argv`` arguments.
         """
 

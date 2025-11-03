@@ -47,7 +47,16 @@ _ANSWERS = (
 
 
 def main(endless: bool = False):
-    """Ask the magic 8 ball a question."""
+    """Ask the magic 8 ball a question.
+
+    Prompts the user to give a question to the Magic 8 Ball, then prints the
+    Magic 8 Ball's answer.
+
+    Args:
+        endless (bool): Whether or not to automatically prompt the user for a
+            new question after the Magic 8 Ball answers the previous one
+            (default: False).
+    """
 
     global _ANSWERS
 
@@ -55,7 +64,7 @@ def main(endless: bool = False):
         input("Your question: ") # NOTE: does not *actually* need the answer
     except EOFError:
         print("\nGoodbye!")
-        return
+        exit()
 
     print("The magic 8-ball says:", random.choice(_ANSWERS))
 
