@@ -1,3 +1,5 @@
+# PYTHON_ARGCOMPLETE_OK
+
 from ._application import Application, BadArgumentError
 
 

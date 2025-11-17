@@ -223,7 +223,8 @@ class _GameState:
 
         return self._generate_count_message(count, guess)
 
-    def _generate_count_message(self, count: int, letter: str) -> str:
+    @staticmethod
+    def _generate_count_message(count: int, letter: str) -> str:
         """Creates a string stating the number of matches for the given guess.
 
         Uses the provided `count` and `letter` values to construct a message,
@@ -251,7 +252,7 @@ class _GameState:
         return f"There {copula} {count} letter {letter.upper()}{num_marker}"
 
 
-def _validate_lives(lives: int):
+def _check_validity_lives(lives: int):
     """TODO
 
     Args:
@@ -264,7 +265,7 @@ def _validate_lives(lives: int):
         raise ValueError("cannot start game with less than 1 life")
 
 
-def _get_random_word():
+def _get_random_word() -> str:
     """TODO
 
     Returns:
@@ -278,12 +279,20 @@ def _get_random_word():
     return random.choice(valid_words)
 
 
-def _ask_for_guess(game_state: _GameState):
+def _prompt_guess(game_state: _GameState) -> bool:
     """TODO
 
     Args:
         game_state (_GameState): TODO
+
+    Returns:
+        bool: Whether or not the user requested to exit the program; if an EOF
+            ('end-of-file') was added to the standard input stream (i.e. with
+            the CTRL + D shortcut).
     """
+
+    # NOTE: This function might have gotten a bit too long. May need to break
+    # it into smaller functions later
 
     print(game_state.summarize())
 
@@ -291,14 +300,17 @@ def _ask_for_guess(game_state: _GameState):
         guess = input("your guess: ")
     except EOFError: # return early if user hits CTRL+D / EOF
         print('\nGoodbye!')
-        exit()
+        return True
 
-    result_msg = game_state.try_guess(guess.lower())
+    guess = guess.lower() # make input case insensitive
 
-    if result_msg:
-        print(result_msg)
+    result_message = game_state.try_guess(guess)
+
+    if result_message:
+        print(result_message)
 
     print() # newline
+    return False
 
 
 def main(endless: bool = False, lives: int = 8):
@@ -318,18 +330,22 @@ def main(endless: bool = False, lives: int = 8):
             than 1 life.
     """
 
-    _validate_lives(lives)
+    _check_validity_lives(lives)
 
-    original_lives = lives
-    game_state = _GameState(_get_random_word(), lives)
+    while True:
+        game_state = _GameState(_get_random_word(), lives)
 
-    while game_state.lives and game_state.secret_word.hidden:
-        _ask_for_guess(game_state)
+        while game_state.lives and game_state.secret_word.hidden:
+            if _prompt_guess(game_state): # if user asked to exit the program
+                return None # exit function early
 
-    game_state.secret_word.hidden = False
-    print("You win!" if game_state.lives else "Game over!")
-    print(f"The secret word was \"{game_state.secret_word}\"")
+        # make the entire secret word visible when parsed into a string
+        game_state.secret_word.hidden = False
 
-    if endless:
+        print("You win!" if game_state.lives else "Game over!")
+        print(f"The secret word was \"{game_state.secret_word}\"")
+
+        if not endless:
+            return None
+
         print() # newline
-        self.launch(True, original_lives)

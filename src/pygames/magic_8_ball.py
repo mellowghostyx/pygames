@@ -60,14 +60,16 @@ def main(endless: bool = False):
 
     global _ANSWERS
 
-    try:
-        input("Your question: ") # NOTE: does not *actually* need the answer
-    except EOFError:
-        print("\nGoodbye!")
-        exit()
+    while True:
+        try:
+            input("Your question: ") # NOTE: answer not *actually* needed
+        except EOFError:
+            print("\nGoodbye!")
+            return None # exit function early
 
-    print("The magic 8-ball says:", random.choice(_ANSWERS))
+        print("The magic 8-ball says:", random.choice(_ANSWERS))
 
-    if endless:
+        if not endless:
+            return None
+
         print() # newline
-        main(True)

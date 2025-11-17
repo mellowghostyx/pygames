@@ -1,3 +1,4 @@
+import argcomplete
 import argparse
 import inspect
 import pathlib
@@ -90,6 +91,8 @@ class Application:
         for module in (hangman, magic_8_ball):
             self._add_subcommand(subparsers, module)
 
+        argcomplete.autocomplete(self._parser)
+
     def run(self, *argv): # HACK: optimize!
         """Runs PyGames with the provided arguments.
 
@@ -111,8 +114,9 @@ class Application:
         except ValueError as e:
             raise BadArgumentError(f"invalid config: {e}")
 
+    @classmethod
     def _add_subcommand(
-        self,
+        cls,
         subparsers: argparse._SubParsersAction,
         module: ModuleType,
     ):
@@ -140,13 +144,14 @@ class Application:
         short_flags = set()
 
         for parameter in inspect.signature(main_function).parameters.values():
-            flags, config = self._create_argument_data(short_flags, parameter)
+            flags, config = cls._create_argument_data(short_flags, parameter)
             subparser.add_argument(*flags, **config)
 
         subparser.set_defaults(function=main_function)
 
+    @classmethod
     def _create_argument_data(
-        self,
+        cls,
         short_flags: set,
         parameter: inspect.Parameter,
     ) -> (tuple, dict):
@@ -161,11 +166,11 @@ class Application:
             dict: TODO
         """
 
-        flags = self._create_argument_flags(short_flags, parameter)
+        flags = cls._create_argument_flags(short_flags, parameter)
         config = dict()
 
-        if parameter.name in self._OPTION_HELP.keys():
-            config['help'] = self._OPTION_HELP[parameter.name]
+        if parameter.name in cls._OPTION_HELP.keys():
+            config['help'] = cls._OPTION_HELP[parameter.name]
 
         has_annotation = parameter.annotation != inspect.Parameter.empty
         has_default = parameter.default != inspect.Parameter.empty
@@ -181,8 +186,8 @@ class Application:
 
         return (flags, config)
 
+    @staticmethod
     def _create_argument_flags(
-        self,
         short_flags: set,
         parameter: inspect.Parameter,
     ) -> tuple:
